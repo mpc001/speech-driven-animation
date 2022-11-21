@@ -115,14 +115,14 @@ class VideoAnimator():
         self.img_size = model_dict["img_size"]
         self.audio_rate = model_dict["audio_rate"]
         self.video_rate = model_dict["video_rate"]
-        self.audio_feat_len = model_dict['audio_feat_len']
-        self.audio_feat_samples = model_dict['audio_feat_samples']
-        self.id_enc_dim = model_dict['id_enc_dim']
-        self.rnn_gen_dim = model_dict['rnn_gen_dim']
-        self.aud_enc_dim = model_dict['aud_enc_dim']
-        self.aux_latent = model_dict['aux_latent']
-        self.sequential_noise = model_dict['sequential_noise']
-        self.conversion_dict = {'s16': np.int16, 's32': np.int32}
+        self.audio_feat_len = model_dict["audio_feat_len"]
+        self.audio_feat_samples = model_dict["audio_feat_samples"]
+        self.id_enc_dim = model_dict["id_enc_dim"]
+        self.rnn_gen_dim = model_dict["rnn_gen_dim"]
+        self.aud_enc_dim = model_dict["aud_enc_dim"]
+        self.aux_latent = model_dict["aux_latent"]
+        self.sequential_noise = model_dict["sequential_noise"]
+        self.conversion_dict = {"s16": np.int16, "s32": np.int32}
 
         self.img_transform = transforms.Compose([
             transforms.ToPILImage(),
@@ -133,11 +133,11 @@ class VideoAnimator():
         self.encoder = RNN(self.audio_feat_len, self.aud_enc_dim, self.rnn_gen_dim,
                            self.audio_rate, init_kernel=0.005, init_stride=0.001)
         self.encoder.to(self.device)
-        self.encoder.load_state_dict(model_dict['encoder'])
+        self.encoder.load_state_dict(model_dict["encoder"])
 
         self.encoder_id = Encoder(self.id_enc_dim, self.img_size)
         self.encoder_id.to(self.device)
-        self.encoder_id.load_state_dict(model_dict['encoder_id'])
+        self.encoder_id.load_state_dict(model_dict["encoder_id"])
 
         skip_channels = list(self.encoder_id.channels)
         skip_channels.reverse()
@@ -148,7 +148,7 @@ class VideoAnimator():
                                    sequential_noise=self.sequential_noise)
 
         self.generator.to(self.device)
-        self.generator.load_state_dict(model_dict['generator'])
+        self.generator.load_state_dict(model_dict["generator"])
 
         self.encoder.eval()
         self.encoder_id.eval()
@@ -168,7 +168,7 @@ class VideoAnimator():
                 frame = np.rollaxis(video[i, :, :, :], 0, 3)
 
                 if scale is not None:
-                    frame = tf.rescale(frame, scale, anti_aliasing=True, multichannel=True, mode='reflect')
+                    frame = tf.rescale(frame, scale, anti_aliasing=True, multichannel=True, mode="reflect")
 
                 writer.writeFrame(frame)
             writer.close()
@@ -190,11 +190,10 @@ class VideoAnimator():
     def preprocess_img(self, img):
         src = self.fa.get_landmarks(img)[0][self.stablePntsIDs, :]
         dst = self.mean_face[self.stablePntsIDs, :]
-        tform = tf.estimate_transform('similarity', src, dst)  # find the transformation matrix
+        tform = tf.estimate_transform("similarity", src, dst)  # find the transformation matrix
         warped = tf.warp(img, inverse_map=tform.inverse, output_shape=self.img_size)  # wrap the frame image
         warped = warped * 255  # note output from wrap is double image (value range [0,1])
-        warped = warped.astype('uint8')
-
+        warped = warped.astype("uint8")
         return warped
 
     def _cut_sequence_(self, seq, cutting_stride, pad_samples):
@@ -230,11 +229,11 @@ class VideoAnimator():
 
         if isinstance(audio, str):  # if we have a path then grab the audio clip
             info = mediainfo(audio)
-            fs = int(info['sample_rate'])
-            audio = np.array(AudioSegment.from_file(audio, info['format_name']).set_channels(1).get_array_of_samples())
+            fs = int(info["sample_rate"])
+            audio = np.array(AudioSegment.from_file(audio, info["format_name"]).set_channels(1).get_array_of_samples())
 
-            if info['sample_fmt'] in self.conversion_dict:
-                audio = audio.astype(self.conversion_dict[info['sample_fmt']])
+            if info["sample_fmt"] in self.conversion_dict:
+                audio = audio.astype(self.conversion_dict[info["sample_fmt"]])
             else:
                 if max(audio) > np.iinfo(np.int16).max:
                     audio = audio.astype(np.int32)

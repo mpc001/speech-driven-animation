@@ -25,6 +25,7 @@ class Encoder(nn.Module):
         self.num_layers = int(np.log2(max(self.img_size))) - 2
 
         stride = 2
+
         # This ensures that we have same padding no matter if we have even or odd kernels
         padding = calculate_padding(kernel_size, stride)
 
